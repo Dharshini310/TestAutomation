@@ -3,14 +3,27 @@ import React, {
   useRef,
   useEffect,
   useContext
-} from 'react';
+} from "react";
 
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
-import '../create/Create.css';
-import { lex_context } from '../../App';
+import "../create/Create.css";
+
+import { lex_context } from "../../App";
+
+import BotSidebar from "./BotSidebar";
+import CreateTestSetModal from "./CreateTestSetModal";
+import UploadFileModal from "./UploadFileModal";
+import AnalysisDashboard from "./AnalyzeDashboard";
+
+import {
+  fetchLexBotsAPI,
+  fetchUserBotsAPI,
+  fetchFilesAPI,
+  uploadFileAPI,
+  fetchAnalysisAPI
+} from "./createService";
 
 function Create({
   activeMenu,
@@ -127,14 +140,12 @@ function Create({
 
       try {
 
-        const response = await axios.get(
-          `https://pmayt54z3l.execute-api.us-east-1.amazonaws.com/prod/Fetch?resultPath=${encodeURIComponent(resultPath)}`
-        );
+       const data =
+  await fetchAnalysisAPI(
+    resultPath
+  );
 
-        const data =
-          typeof response.data.body === "string"
-            ? JSON.parse(response.data.body)
-            : response.data;
+        
 
         if (data.result) {
 
@@ -201,44 +212,47 @@ function Create({
   }
 
 };
-  const fetchLexBots = async () => {
-    try {
-      const response = await axios.get(
-        'https://pmayt54z3l.execute-api.us-east-1.amazonaws.com/prod/Fetch'
-      );
+ const fetchLexBots = async () => {
+  try {
+    const data =
+      await fetchLexBotsAPI();
 
-      const data =
-        typeof response.data.body === 'string'
-          ? JSON.parse(response.data.body)
-          : response.data;
+    setBots(data.bots || []);
+  } catch (error) {
+    console.error(error);
 
-      setBots(data.bots || []);
-    } catch (error) {
-      console.error(error);
-      setBots([]);
-      toast.error('Failed to fetch Lex bots');
-    }
-  };
+    setBots([]);
+
+    toast.error(
+      "Failed to fetch Lex bots"
+    );
+  }
+};
   //CASE - 2
-  const fetchUserBots = async (email) => {
-    try {
-      const response = await axios.get(
-        `https://pmayt54z3l.execute-api.us-east-1.amazonaws.com/prod/Fetch?email=${email}`
+  const fetchUserBots = async (
+  email
+) => {
+  try {
+    const data =
+      await fetchUserBotsAPI(
+        email
       );
 
-      const data =
-        typeof response.data.body === 'string'
-          ? JSON.parse(response.data.body)
-          : response.data;
+    setUserBots(
+      data.userBots || []
+    );
 
-      console.log("USER BOTS RESPONSE:", data);
-      setUserBots(data.userBots || []);
-      setTestSets(data.testSets || []);
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to fetch user bots');
-    }
-  };
+    setTestSets(
+      data.testSets || []
+    );
+  } catch (error) {
+    console.error(error);
+
+    toast.error(
+      "Failed to fetch user bots"
+    );
+  }
+};
 
   const handleBotChange = (e) => {
     const selectedBot = e.target.value;
@@ -276,27 +290,31 @@ function Create({
     }
   };
   //CASE - 3
-  const fetchFiles = async (botName) => {
-    try {
-      setLoadingFiles(true);
-      const response = await axios.get(
-        `https://pmayt54z3l.execute-api.us-east-1.amazonaws.com/prod/Fetch?email=${displayEmail}&botName=${botName}`
+  const fetchFiles = async (
+  botName
+) => {
+  try {
+    setLoadingFiles(true);
+
+    const data =
+      await fetchFilesAPI(
+        displayEmail,
+        botName
       );
 
-      const data =
-        typeof response.data.body === 'string'
-          ? JSON.parse(response.data.body)
-          : response.data;
+    setFiles(
+      data.files || []
+    );
+  } catch (error) {
+    console.error(error);
 
-      setFiles(data.files || []);
-      // setShowFiles(true);
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to fetch files');
-    } finally {
-      setLoadingFiles(false)
-    }
-  };
+    toast.error(
+      "Failed to fetch files"
+    );
+  } finally {
+    setLoadingFiles(false);
+  }
+};
 
   const handleAddFile = async () => {
     if (!newFile) {
@@ -349,16 +367,7 @@ function Create({
             payload
           );
 
-          await axios.post(
-            "https://nh1wspqjrd.execute-api.us-east-1.amazonaws.com/prod/upload",
-            payload,
-            {
-              headers: {
-                "Content-Type":
-                  "application/json"
-              }
-            }
-          );
+          await uploadFileAPI(payload);
           
 
           toast.success(
@@ -422,15 +431,7 @@ function Create({
               selectedTestSet?.testSetId
           };
 
-          const response = await axios.post(
-            'https://nh1wspqjrd.execute-api.us-east-1.amazonaws.com/prod/upload',
-            payload,
-            {
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            }
-          );
+          const response = await uploadFileAPI(payload);
 
           console.log(response.data);
           toast.success("Test Set Created Successfully")
@@ -587,469 +588,166 @@ function Create({
     <>
       {showBots &&
  activeMenu === "myBots" &&
- isCreated &&
- !showCreateForm ? (
+ isCreated ? (
 
         <div className="dashboard-layout">
 
           {/* LEFT PANEL */}
-          <div className="left-panel">
-            {activeMenu === "myBots" && (
-            <div className="bot-sidebar">
-
-              <div className="sidebar-header">
-                <h3>My Bots</h3>
-
-                <button
-                  className="create-testcase-btn"
-                  onClick={() => {
-                    setShowCreateForm(true);
-                    setFile(null);
-                    setBotName('');
-                    setBotAliasName('');
-                    setAliases([]);
-                  }}
-                >
-                  + Create Test Set
-                </button>
-              </div>
-
-              {userBots.map((bot) => (
-                <div key={bot}>
-
-                  <div
-                    className={`bot-card ${selectedBot === bot
-                        ? "active-bot"
-                        : ""
-                      }`}
-                    onClick={() => {
-                      setSelectedBot(bot);
-                      setFiles([]);
-                      fetchFiles(bot);
-                    }}
-                  >
-                    <span className="bot-name">{bot}</span>
-
-                    {selectedBot === bot && (
-                      <span
-                        className="add-file-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowUploadPopup(true);
-                        }}
-                      >
-                        +
-                      </span>
-                    )}
-                  </div>
-
-                  {selectedBot === bot && (
-                    <div className="bot-files">
-
-                      {loadingFiles ? (
-                        <p>Loading...</p>
-                      ) : files.length > 0 ? (
-
-                        files.map((file, index) => (
-                          <div
-                            key={index}
-                            className="file-row"
-                          >
-                            <span>
-                              📄 {file.fileName}
-                            </span>
-
-                            <button
-                              className="analyze-btn"
-                              onClick={() =>
-                                handleAnalyze(
-                                  selectedBot,
-                                  file.fileName,
-                                  file.resultPath
-                                )
-                              }
-                            >
-                              Analyze
-                            </button>
-                          </div>
-                        ))
-
-                      ) : (
-                        <p>{null}</p>
-                      )}
-
-                    </div>
-                  )}
-
-                </div>
-              ))}
-
-            </div>
-            )}
-
-          </div>
+          {/* <div className="left-panel">
+  <BotSidebar
+    userBots={userBots}
+    selectedBot={selectedBot}
+    files={files}
+    loadingFiles={loadingFiles}
+    setSelectedBot={
+      setSelectedBot
+    }
+    setFiles={setFiles}
+    fetchFiles={fetchFiles}
+    setShowUploadPopup={
+      setShowUploadPopup
+    }
+    setShowCreateForm={
+      setShowCreateForm
+    }
+    setFile={setFile}
+    setBotName={setBotName}
+    setBotAliasName={
+      setBotAliasName
+    }
+    setAliases={setAliases}
+    handleAnalyze={
+      handleAnalyze
+    }
+  />
+</div> */}
 
           {/* RIGHT PANEL */}
-          <div className="right-panel">
+         {/* RIGHT PANEL */}
+<div className="right-panel">
 
-            <div className="testsets-section">
+    {/* BOT + TESTSET OVERVIEW */}
+    <div className="lex-dashboard-container">
 
+  {/* Header */}
+  <div className="dashboard-header">
+    <div>
+      <span className="module-tag">AMAZON LEX</span>
 
+      <h1>Lex Bot Testing</h1>
 
-              {/* ANALYSIS RESULTS */}
-              {/* ANALYSIS RESULTS */}
+      <p>
+        Validate utterance recognition, intent mapping,
+        slot capture, confidence score and fallback handling
+        for Lex bots.
+      </p>
+    </div>
 
-              {analysisLoading ? (
+    <button
+      className="create-btn"
+      onClick={() => setShowCreateForm(true)}
+    >
+      <span>+</span> Create Test Set
+    </button>
+  </div>
 
-               <div className="analysis-loading">
+  {/* Bot and Testset Section */}
+  <div className="bot-testset-card">
 
-    <div className="spinner"></div>
+    {/* My Bots */}
+    <div className="bots-column">
+      <h2>My Bots</h2>
 
-    <h2>Analysis In Progress</h2>
+      {userBots.map((bot, index) => (
+        <div
+          key={index}
+          className={`bot-card ${
+            selectedBot === bot ? "active-bot" : ""
+          }`}
+          onClick={() => {
+            setSelectedBot(bot);
+            fetchFiles(bot);
+          }}
+        >
+          <div className="bot-icon">🤖</div>
 
-    <p>
-      Executing test cases...
-    </p>
+          <span>{bot}</span>
+        </div>
+      ))}
+    </div>
 
-   
+    {/* Test Sets */}
+    <div className="testset-column">
+      <h2>Test Sets</h2>
+
+      {files.map((file, index) => (
+        <div
+          key={index}
+          className="testset-card"
+        >
+          <div className="testset-left">
+            📄 {file.fileName}
+          </div>
+
+          <button
+            className="analyze-btn"
+            onClick={() =>
+              handleAnalyze(
+                selectedBot,
+                file.fileName
+              )
+            }
+          >
+            Analyze
+          </button>
+        </div>
+      ))}
+    </div>
 
   </div>
 
-              ) : analysisData && (
-
-                <div className="analysis-container">
-
-                  <div className="analyze-header">
-
-                    <h2>Analysis Dashboard</h2>
-
-                    <div className="button-group">
-
-                      <button
-                        className="action-btn download-btn"
-                        onClick={downloadFailures}
-                      >
-                        Download Failures CSV
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                  <div className="result-box">
-
-                    <h3>Analysis Summary</h3>
-
-                    <table className="analysis-table">
-
-                      <thead>
-                        <tr>
-                          {/* <th>Email</th> */}
-                          <th>Bot Name</th>
-                          <th>File Name</th>
-                          <th>Total Conversations</th>
-                          <th>Passed</th>
-                          <th>Failed</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        <tr>
-                          {/* <td>{analysisInfo.email}</td> */}
-
-                          <td>{analysisInfo.botName}</td>
-
-                          <td>{analysisInfo.fileName}</td>
-
-                          <td>
-                            {
-                              analysisData?.overallResults
-                                ?.testExecutionResults
-                                ?.overallTestResults
-                                ?.items?.[0]
-                                ?.totalResultCount || 0
-                            }
-                          </td>
-
-                          <td>
-                            {
-                              analysisData?.overallResults
-                                ?.testExecutionResults
-                                ?.overallTestResults
-                                ?.items?.[0]
-                                ?.endToEndResultCounts
-                                ?.Matched || 0
-                            }
-                          </td>
-
-                          <td>
-                            {
-                              analysisData?.overallResults
-                                ?.testExecutionResults
-                                ?.overallTestResults
-                                ?.items?.[0]
-                                ?.endToEndResultCounts
-                                ?.Mismatched || 0
-                            }
-                          </td>
-                        </tr>
-                      </tbody>
-
-                    </table>
-
-                  </div>
-
-                  {/* Intent Results */}
-
-                  <div className="result-box">
-
-                    <h3>Intent Results</h3>
-
-                    <table className="analysis-table">
-
-                      <thead>
-                        <tr>
-                          <th>S.No</th>
-                          <th>Intent Name</th>
-                          <th>Total</th>
-                          <th>Matched</th>
-                          <th>Failed</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-
-                        {analysisData?.intentResults
-                          ?.testExecutionResults
-                          ?.intentClassificationTestResults
-                          ?.items?.map((intent, index) => (
-
-                            <tr key={index}>
-
-                              <td>{index + 1}</td>
-
-                              <td>{intent.intentName}</td>
-
-                              <td>
-                                {intent.resultCounts?.totalResultCount}
-                              </td>
-
-                              <td>
-                                {
-                                  intent.resultCounts
-                                    ?.intentMatchResultCounts
-                                    ?.Matched || 0
-                                }
-                              </td>
-
-                              <td>
-                                {
-                                  intent.resultCounts
-                                    ?.intentMatchResultCounts
-                                    ?.Mismatched || 0
-                                }
-                              </td>
-
-                            </tr>
-
-                          ))}
-
-                      </tbody>
-
-                    </table>
-
-                  </div>
-
-                  {/* Conversation Results */}
-                  <div className="result-box">
-
-                    <h3>Conversation Results</h3>
-
-                    <table className="analysis-table">
-
-                      <thead>
-                        <tr>
-                          <th>Conversation ID</th>
-                          <th>Result</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-
-                        {analysisData?.conversationResults
-                          ?.testExecutionResults
-                          ?.conversationLevelTestResults
-                          ?.items?.map((conv, index) => (
-
-                            <tr key={index}>
-
-
-
-                              <td>{conv.conversationId}</td>
-
-                              <td>
-                                <span
-                                  className={
-                                    conv.endToEndResult === "Matched"
-                                      ? "status-ready"
-                                      : "status-error"
-                                  }
-                                >
-                                  {conv.endToEndResult}
-                                </span>
-                              </td>
-
-                            </tr>
-
-                          ))}
-
-                      </tbody>
-
-                    </table>
-
-                  </div>
-
-                  {/* Conversation Details */}
-
-                  <div className="result-box">
-
-                    <h3>Conversation Details</h3>
-
-                    <table className="analysis-table">
-
-                      <thead>
-                        <tr>
-                          <th>Conversation ID</th>
-                          <th>User Input</th>
-                          <th>Expected Intent</th>
-                          <th>Actual Intent</th>
-                          <th>Result</th>
-                          <th>Error</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-
-                        {utterances.map((item, index) => {
-
-                          const user =
-                            item.turnResult?.user;
-
-                          return (
-
-                            <tr key={index}>
-
-                              <td>
-                                {item.conversationId}
-                              </td>
-
-                              <td>
-                                {
-                                  user?.input
-                                    ?.utteranceInput
-                                    ?.textInput || "-"
-                                }
-                              </td>
-
-                              <td>
-                                {
-                                  user?.expectedOutput
-                                    ?.intent?.name || "-"
-                                }
-                              </td>
-
-                              <td>
-                                {
-                                  user?.actualOutput
-                                    ?.intent?.name || "-"
-                                }
-                              </td>
-
-                              <td>
-                                {
-                                  user?.intentMatchResult ||
-                                  "-"
-                                }
-                              </td>
-
-                              <td>
-                                {
-                                  user?.errorDetails
-                                    ?.errorMessage || "-"
-                                }
-                              </td>
-
-                            </tr>
-
-                          );
-
-                        })}
-
-                      </tbody>
-
-                    </table>
-
-                  </div>
-
-                </div>
-
-              )}
-
-              {/* <h3>Available Test Sets</h3>
-
-            <div className="testset-table-container">
-
-  <table className="testset-table">
-
-    <thead>
-      <tr>
-        <th>S.No</th>
-        <th>Test Set Name</th>
-        <th>Test Set ID</th>
-        <th>Status</th>
-        <th>Modality</th>
-      </tr>
-    </thead>
-
-    <tbody>
-
-      {testSets.map((testSet, index) => (
-
-        <tr key={testSet.testSetId}>
-
-          <td>{index + 1}</td>
-
-          <td>{testSet.testSetName}</td>
-
-          <td>{testSet.testSetId}</td>
-
-          <td>
-            <span
-              className={
-                testSet.status === "Ready"
-                  ? "status-ready"
-                  : "status-error"
-              }
-            >
-              {testSet.status}
-            </span>
-          </td>
-
-          <td>{testSet.modality}</td>
-
-        </tr>
-
-      ))}
-
-    </tbody>
-
-  </table>
-
-</div> */}
-
-            </div>
-
-          </div>
+  {/* Statistics */}
+  <div className="stats-container">
+
+    <div className="stat-card">
+      <h4>Test Sets</h4>
+      <h2>{files.length}</h2>
+      <p>Lex Bot Testing records</p>
+    </div>
+
+    <div className="stat-card">
+      <h4>Total Cases</h4>
+      <h2>348</h2>
+      <p>Dynamic total</p>
+    </div>
+
+    <div className="stat-card">
+      <h4>Pass Rate</h4>
+      <h2>91%</h2>
+      <p className="success-text">Healthy</p>
+    </div>
+
+    <div className="stat-card">
+      <h4>Failed Cases</h4>
+      <h2>33</h2>
+      <p>Open failures</p>
+    </div>
+
+  </div>
+
+</div>
+   
+
+    {/* ANALYSIS DASHBOARD */}
+    <AnalysisDashboard
+        analysisLoading={analysisLoading}
+        analysisData={analysisData}
+        analysisInfo={analysisInfo}
+        utterances={utterances}
+        downloadFailures={downloadFailures}
+    />
+
+</div>
 
         </div>
 
@@ -1059,203 +757,61 @@ function Create({
 
       )}
 
-      {showCreateForm && (
+     <CreateTestSetModal
+  showCreateForm={
+    showCreateForm
+  }
+  displayEmail={
+    displayEmail
+  }
+  fileRef={fileRef}
+  setFile={setFile}
+  botName={botName}
+  handleBotChange={
+    handleBotChange
+  }
+  uniqueBotNames={
+    uniqueBotNames
+  }
+  botAliasName={
+    botAliasName
+  }
+  setBotAliasName={
+    setBotAliasName
+  }
+  aliases={aliases}
+  testSets={testSets}
+  selectedTestSet={
+    selectedTestSet
+  }
+  setSelectedTestSet={
+    setSelectedTestSet
+  }
+  handleCreate={
+    handleCreate
+  }
+  setShowCreateForm={
+    setShowCreateForm
+  }
+  setBotName={setBotName}
+  setAliases={setAliases}
+/>
 
-  <div className="popup-overlay">
-
-    <div className="popup-content create-popup">
-
-      <h2>Create Test Set</h2>
-
-      <form onSubmit={handleCreate}>
-
-        <label>Email</label>
-
-        <input
-          type="email"
-          value={displayEmail}
-          readOnly
-        />
-
-        <label>Upload CSV File</label>
-
-        <input
-          type="file"
-          accept=".csv"
-          ref={fileRef}
-          onChange={(e) =>
-            setFile(e.target.files[0])
-          }
-          required
-        />
-
-        <label>Bot Name</label>
-
-        <select
-          value={botName}
-          onChange={handleBotChange}
-          required
-        >
-          <option value="">
-            Select Bot
-          </option>
-
-          {uniqueBotNames.map((bot) => (
-
-            <option
-              key={bot}
-              value={bot}
-            >
-              {bot}
-            </option>
-
-          ))}
-        </select>
-
-        <label>Bot Alias</label>
-
-        <select
-          value={botAliasName}
-          onChange={(e) =>
-            setBotAliasName(e.target.value)
-          }
-          required
-        >
-          <option value="">
-            Select Alias
-          </option>
-
-          {aliases.map((alias) => (
-
-            <option
-              key={alias}
-              value={alias}
-            >
-              {alias}
-            </option>
-
-          ))}
-        </select>
-
-        <label>Test Set</label>
-
-        <select
-          value={
-            selectedTestSet?.testSetId || ""
-          }
-          onChange={(e) => {
-
-            const selected =
-              testSets.find(
-                (testSet) =>
-                  testSet.testSetId ===
-                  e.target.value
-              );
-
-            setSelectedTestSet(
-              selected
-            );
-
-          }}
-          required
-        >
-
-          <option value="">
-            Select Test Set
-          </option>
-
-          {testSets.map((testSet) => (
-
-            <option
-              key={testSet.testSetId}
-              value={testSet.testSetId}
-            >
-              {testSet.testSetName}
-            </option>
-
-          ))}
-
-        </select>
-
-        <div className="popup-buttons">
-
-          <button
-            type="button"
-            onClick={() => {
-
-              setShowCreateForm(false);
-
-              setFile(null);
-              setBotName('');
-              setBotAliasName('');
-              setAliases([]);
-
-              if (fileRef.current) {
-                fileRef.current.value = '';
-              }
-
-            }}
-          >
-            Cancel
-          </button>
-
-          <button type="submit">
-            Create
-          </button>
-
-        </div>
-
-      </form>
-
-    </div>
-
-  </div>
-
-)}
-
-      {showUploadPopup && (
-        <div className="popup-overlay">
-
-          <div className="popup-content">
-
-            <h3>
-              Add File to Existing Bot
-            </h3>
-
-            <p>
-              <strong>Bot:</strong>{" "}
-              {selectedBot}
-            </p>
-
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) =>
-                setNewFile(e.target.files[0])
-              }
-            />
-
-            <div className="popup-buttons">
-
-              <button
-                onClick={() => {
-                  setShowUploadPopup(false);
-                  setNewFile(null);
-                }}
-              >
-                Cancel
-              </button>
-
-              <button onClick={handleAddFile}>
-                Upload
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
+      <UploadFileModal
+  showUploadPopup={
+    showUploadPopup
+  }
+  selectedBot={
+    selectedBot
+  }
+  setNewFile={setNewFile}
+  setShowUploadPopup={
+    setShowUploadPopup
+  }
+  handleAddFile={
+    handleAddFile
+  }
+/>
 
     </>
   );
