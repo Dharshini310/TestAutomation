@@ -1,0 +1,270 @@
+/* =========================
+   ANALYZE DASHBOARD
+========================= */
+
+.analyze-container {
+  padding: 24px;
+  background: #f4f7fb;
+  min-height: 100vh;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.analyze-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.analyze-header h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #163b6d;
+  letter-spacing: 0.5px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  border: none;
+  outline: none;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.download-btn {
+  background: #22c55e;
+  color: white;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(34, 197, 94, 0.25);
+}
+
+.home-btn {
+  background: #2563eb;
+  color: black;
+}
+
+.home-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+}
+
+.back-btn {
+  background: #f59e0b;
+  color: white;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.25);
+}
+
+/* =========================
+   SUMMARY CARDS
+========================= */
+
+.summary-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.card {
+  flex: 1;
+  min-width: 220px;
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+  border-left: 5px solid #2563eb;
+  transition: all 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.card h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.card p {
+  margin-top: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #163b6d;
+}
+
+/* =========================
+   SECTION CONTAINER
+========================= */
+
+.results-section {
+  margin-top: 15px;
+}
+
+.result-box {
+  background: white;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+}
+
+.result-box h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  color: #163b6d;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* =========================
+   TABLES
+========================= */
+
+.analysis-table {
+  width: auto;
+  min-width: 400px;
+  table-layout: auto;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.analysis-table thead {
+  background: #163b6d;
+  color: black;
+}
+
+.analysis-table th {
+  padding: 14px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.analysis-table td {
+  padding: 13px;
+  border-bottom: 1px solid #edf2f7;
+  font-size: 14px;
+  width: fit-content;
+}
+
+.analysis-table tbody tr {
+  transition: 0.2s ease;
+  width: fit-content;
+}
+
+.analysis-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.analysis-table tbody tr:nth-child(even) {
+  background: #fbfcfe;
+}
+
+/* =========================
+   STATUS BADGES
+========================= */
+
+.status-ready {
+  display: inline-block;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 5px 12px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-error {
+  display: inline-block;
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 5px 12px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* =========================
+   ERROR TEXT
+========================= */
+
+.error-message {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* =========================
+   SCROLLABLE TABLE
+========================= */
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+  .analyze-container {
+    padding: 15px;
+  }
+
+  .analyze-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .summary-cards {
+    flex-direction: column;
+  }
+
+  .card {
+    width: 100%;
+  }
+
+  .button-group {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+
+  .analysis-table {
+    min-width: 700px;
+  }
+}

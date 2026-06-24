@@ -1,0 +1,32 @@
+.content{
+    display:flex;
+    min-height:calc(100vh - 70px);
+}
+
+.sidebar{
+    width:220px;
+    padding:20px 10px;
+}
+
+.sidebar.collapsed{
+    width:60px;
+}
+
+.sidebar-title{
+    cursor:pointer;
+    font-size:18px;
+    font-weight:600;
+    color:#070e75;
+    padding:10px;
+    border-radius:8px;
+    transition:0.3s;
+}
+
+.sidebar-title:hover{
+    background:#d9f0fa;
+}
+
+.main-content{
+    flex:1;
+    padding:20px;
+}
