@@ -69,6 +69,14 @@ function Create({
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [testSetName, setTestSetName] = useState("");
   const [selectedTestSet, setSelectedTestSet] = useState(null);
+  const [showEditPopup, setShowEditPopup] =
+  useState(false);
+
+const [editingFile, setEditingFile] =
+  useState(null);
+
+const [updatedFile, setUpdatedFile] =
+  useState(null);
 
 
   const [analysisInfo, setAnalysisInfo] = useState({
@@ -289,6 +297,77 @@ function Create({
       navigate('/user-login');
     }
   };
+
+  const handleUpdateFile = async () => {
+
+  if (!updatedFile) {
+    toast.error(
+      "Please select a file"
+    );
+    return;
+  }
+
+  try {
+
+    const reader =
+      new FileReader();
+
+    reader.onload =
+      async () => {
+
+      const base64File =
+        reader.result
+          .split(",")[1];
+
+      const payload = {
+
+        oldFileName:
+          editingFile.fileName,
+
+        file_name:
+          updatedFile.name,
+
+        file_content:
+          base64File,
+
+        bot_name:
+          selectedBot,
+
+        email:
+          displayEmail
+
+      };
+
+      await axios.post(
+        "YOUR_UPDATE_API",
+        payload
+      );
+
+      toast.success(
+        "File Updated Successfully"
+      );
+
+      setShowEditPopup(false);
+
+      setUpdatedFile(null);
+
+      fetchFiles(selectedBot);
+
+    };
+
+    reader.readAsDataURL(
+      updatedFile
+    );
+
+  } catch (error) {
+
+    toast.error(
+      "Failed to update file"
+    );
+
+  }
+
+};
   //CASE - 3
   const fetchFiles = async (
   botName
@@ -396,6 +475,45 @@ function Create({
       );
     }
   };
+  const handleDeleteFile = async () => {
+
+  try {
+
+    const payload = {
+
+      bot_name:
+        analysisInfo.botName,
+
+      file_name:
+        analysisInfo.fileName,
+
+      email:
+        displayEmail
+
+    };
+
+    await axios.post(
+      "YOUR_DELETE_API",
+      payload
+    );
+
+    toast.success(
+      "File deleted successfully"
+    );
+
+    fetchFiles(selectedBot);
+
+    setAnalysisData(null);
+
+  } catch (error) {
+
+    toast.error(
+      "Failed to delete file"
+    );
+
+  }
+
+};
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -584,6 +702,26 @@ function Create({
 
     document.body.removeChild(link);
   };
+  const totalCases = utterances.length;
+
+const passedCases = utterances.filter(
+  item =>
+    item.turnResult?.user?.intentMatchResult ===
+    "Matched"
+).length;
+
+const failedCases = utterances.filter(
+  item =>
+    item.turnResult?.user?.intentMatchResult !==
+    "Matched"
+).length;
+
+const passRate =
+  totalCases > 0
+    ? Math.round(
+        (passedCases / totalCases) * 100
+      )
+    : 0;
   return (
     <>
       {showBots &&
@@ -709,43 +847,72 @@ function Create({
   {/* Statistics */}
   <div className="stats-container">
 
-    <div className="stat-card">
-      <h4>Test Sets</h4>
-      <h2>{files.length}</h2>
-      <p>Lex Bot Testing records</p>
-    </div>
+  <div className="stat-card">
+    <h4>Test Sets</h4>
 
-    <div className="stat-card">
-      <h4>Total Cases</h4>
-      <h2>348</h2>
-      <p>Dynamic total</p>
-    </div>
+    <h2>{files.length}</h2>
 
-    <div className="stat-card">
-      <h4>Pass Rate</h4>
-      <h2>91%</h2>
-      <p className="success-text">Healthy</p>
-    </div>
+    <p>
+      Lex Bot Testing records
+    </p>
+  </div>
 
-    <div className="stat-card">
-      <h4>Failed Cases</h4>
-      <h2>33</h2>
-      <p>Open failures</p>
-    </div>
+  <div className="stat-card">
+
+    <h4>Total Cases</h4>
+
+    <h2>{totalCases}</h2>
+
+    <p>Dynamic total</p>
 
   </div>
+
+  <div className="stat-card">
+
+    <h4>Pass Rate</h4>
+
+    <h2>{passRate}%</h2>
+
+    <p className="success-text">
+
+      {passRate >= 90
+        ? "Healthy"
+        : passRate >= 70
+        ? "Average"
+        : "Critical"}
+
+    </p>
+
+  </div>
+
+  <div className="stat-card">
+
+    <h4>Failed Cases</h4>
+
+    <h2>{failedCases}</h2>
+
+    <p>Open failures</p>
+
+  </div>
+
+</div>
 
 </div>
    
 
     {/* ANALYSIS DASHBOARD */}
     <AnalysisDashboard
-        analysisLoading={analysisLoading}
-        analysisData={analysisData}
-        analysisInfo={analysisInfo}
-        utterances={utterances}
-        downloadFailures={downloadFailures}
-    />
+  analysisLoading={analysisLoading}
+  analysisData={analysisData}
+  analysisInfo={analysisInfo}
+  utterances={utterances}
+  downloadFailures={downloadFailures}
+  setShowEditPopup={setShowEditPopup}
+  setEditingFile={setEditingFile}
+   handleDeleteFile={
+    handleDeleteFile
+  }
+/>
 
 </div>
 
@@ -812,7 +979,57 @@ function Create({
     handleAddFile
   }
 />
+{/* console.log(
+  "POPUP FILE:",
+  editingFile
+); */}
+{showEditPopup && (
 
+<div className="popup-overlay">
+
+  <div className="popup-content">
+
+    <h3>Replace File</h3>
+
+   <p>
+  <strong>Current File</strong>
+</p>
+
+<div className="current-file-box">
+  📄 {editingFile?.fileName}
+</div>
+
+    <input
+      type="file"
+      accept=".csv"
+      onChange={(e) =>
+        setUpdatedFile(
+          e.target.files[0]
+        )
+      }
+    />
+
+    <div className="popup-buttons">
+
+      <button
+        onClick={() =>
+          setShowEditPopup(false)
+        }
+      >
+        Cancel
+      </button>
+
+      <button>
+        Update File
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+)}
     </>
   );
 }

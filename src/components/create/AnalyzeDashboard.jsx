@@ -1,4 +1,4 @@
-import React from "react";
+import React , {useState}from "react";
 
 import AnalysisSummary from "./AnalyzeSummary";
 import IntentResults from "./IntentResult";
@@ -11,8 +11,13 @@ function AnalysisDashboard({
   analysisData,
   analysisInfo,
   utterances,
-  downloadFailures
-}) {
+  downloadFailures,
+  setShowEditPopup,
+   setEditingFile,
+   handleDeleteFile
+}){
+
+    // const [editingFile, setEditingFile] = useState(null);
   if (analysisLoading) {
     return (
       <div className="analysis-loading">
@@ -174,9 +179,12 @@ const testResults =
             <option>Needs Review</option>
         </select>
 
-        <button className="export-btn">
-            Export JSON
-        </button>
+        <button
+  className="export-btn"
+  onClick={downloadFailures}
+>
+  Export Excel
+</button>
 
     </div>
 
@@ -230,13 +238,46 @@ const testResults =
                             Run
                         </button>
 
-                        <button className="edit-btn">
-                            Edit
-                        </button>
+                        <button
+  className="edit-btn"
+  onClick={() => {
 
-                        <button className="delete-btn">
-                            Delete
-                        </button>
+  console.log(
+    analysisInfo.fileName
+  );
+  console.log(
+  "SETTING:",
+  analysisInfo.fileName
+);
+
+  setEditingFile({
+    fileName:
+      analysisInfo.fileName
+  });
+
+  setShowEditPopup(true);
+
+}}
+>
+  Edit
+</button>
+                        <button
+  className="delete-btn"
+  onClick={() => {
+
+    const confirmDelete =
+      window.confirm(
+        `Are you sure you want to delete ${analysisInfo.fileName}?`
+      );
+
+    if (confirmDelete) {
+      handleDeleteFile();
+    }
+
+  }}
+>
+  Delete
+</button>
 
                     </td>
 
