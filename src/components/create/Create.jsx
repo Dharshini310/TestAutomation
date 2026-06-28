@@ -71,6 +71,7 @@ function Create({
   const [selectedTestSet, setSelectedTestSet] = useState(null);
   const [showEditPopup, setShowEditPopup] =
   useState(false);
+  const [popupMode, setPopupMode] = useState("upload");
 
 const [editingFile, setEditingFile] =
   useState(null);
@@ -299,7 +300,7 @@ const [updatedFile, setUpdatedFile] =
   };
 
   const handleUpdateFile = async () => {
-
+     console.log("updatedFile:", updatedFile);
   if (!updatedFile) {
     toast.error(
       "Please select a file"
@@ -452,8 +453,11 @@ const [updatedFile, setUpdatedFile] =
           toast.success(
             "File Added Successfully"
           );
+          setShowEditPopup(false);
 
-          setShowUploadPopup(false);
+setUpdatedFile(null);
+
+setEditingFile(null);
           setNewFile(null);
 
           fetchFiles(selectedBot);
@@ -988,8 +992,11 @@ const passRate =
 <div className="popup-overlay">
 
   <div className="popup-content">
-
-    <h3>Replace File</h3>
+<h3>
+  {popupMode === "upload"
+    ? "Add File to Existing Bot"
+    : "Replace Existing File"}
+</h3>
 
    <p>
   <strong>Current File</strong>
@@ -1000,33 +1007,72 @@ const passRate =
 </div>
 
     <input
-      type="file"
-      accept=".csv"
-      onChange={(e) =>
-        setUpdatedFile(
-          e.target.files[0]
-        )
-      }
-    />
+  type="file"
+  accept=".csv"
+  onChange={(e) => {
+
+    console.log(
+      "Selected File:",
+      e.target.files[0]
+    );
+
+      setNewFile(e.target.files[0])
+
+  }}
+/>
 
     <div className="popup-buttons">
 
       <button
-        onClick={() =>
-          setShowEditPopup(false)
-        }
-      >
-        Cancel
-      </button>
+  onClick={() => {
 
-      <button>
-        Update File
-      </button>
+    setShowEditPopup(false);
 
+    setUpdatedFile(null);
+
+    setEditingFile(null);
+
+  }}
+>
+  Cancel
+</button>
+
+      <button
+  onClick={() => {
+
+    if (popupMode === "upload") {
+
+      handleAddFile();
+
+    } else {
+
+      handleUpdateFile();
+
+    }
+
+  }}
+>
+  {popupMode === "upload"
+    ? "Upload File"
+    : "Update File"}
+</button>
     </div>
 
   </div>
 
+</div>
+
+)}
+{popupMode === "upload" ? (
+
+<div className="current-file-box">
+  🤖 {selectedBot}
+</div>
+
+) : (
+
+<div className="current-file-box">
+  📄 {editingFile?.fileName}
 </div>
 
 )}

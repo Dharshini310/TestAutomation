@@ -26,7 +26,6 @@ function App() {
   const [showFiles, setShowFiles] = useState(false);
   const [selectedBot, setSelectedBot] = useState('');
   const [selectedAlias, setSelectedAlias] = useState('');
-  const [showUploadPopup, setShowUploadPopup] = useState(false);
 const [newFile, setNewFile] = useState(null);
 const [userBots, setUserBots] = useState([]);
 const [isCreated, setIsCreated] = useState(
@@ -73,8 +72,6 @@ const [showCreateForm, setShowCreateForm] = useState(
       setSelectedAlias,
       setSelectedBot,
       setShowFiles,
-      showUploadPopup,
-       setShowUploadPopup,
        newFile,
         setNewFile,
         showCreateForm, 

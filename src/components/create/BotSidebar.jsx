@@ -8,7 +8,11 @@ function BotSidebar({
   setSelectedBot,
   setFiles,
   fetchFiles,
-  setShowUploadPopup,
+  setShowEditPopup,
+popupMode,
+setPopupMode,
+setEditingFile,
+setUpdatedFile,
   setShowCreateForm,
   setFile,
   setBotName,
@@ -50,15 +54,22 @@ function BotSidebar({
             <span className="bot-name">{bot}</span>
 
             {selectedBot === bot && (
-              <span
-                className="add-file-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowUploadPopup(true);
-                }}
-              >
-                +
-              </span>
+             <span
+  className="add-file-btn"
+  onClick={(e) => {
+    e.stopPropagation();
+
+    setPopupMode("upload");
+
+    setEditingFile(null);
+
+    setUpdatedFile(null);
+
+    setShowEditPopup(true);
+  }}
+>
+  +
+</span>
             )}
           </div>
 
